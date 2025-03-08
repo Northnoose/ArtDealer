@@ -17,6 +17,7 @@ class ArtViewModel : ViewModel(){
 
     var filteredPhotos = mutableStateOf(album.value)
     var chosenPhoto = mutableStateOf<SelectedPhoto?>(null)
+    var shoppingCart = mutableStateOf<List<SelectedPhoto?>>(emptyList())
 
     fun filterPhotosByCategory(category: Category) {
         filteredPhotos.value = album.value.filter {it.category == category}
@@ -26,7 +27,7 @@ class ArtViewModel : ViewModel(){
         filteredPhotos.value = album.value.filter {it.artist.id == artistData.id}
     }
 
-    fun chooseAPhoto(photo: Photo, frame : FrameType = FrameType.WOOD, size: PhotoSize = PhotoSize.SMALL) {
+    fun selectedPhoto(photo: Photo, frame : FrameType = FrameType.WOOD, size: PhotoSize = PhotoSize.SMALL) {
         chosenPhoto.value = SelectedPhoto(
             id = photo.id,
             frame = frame,
@@ -34,4 +35,12 @@ class ArtViewModel : ViewModel(){
             price = frame.extraPrice + size.extraPrice + photo.price,
         )
     }
+
+    fun addToCart() {
+        shoppingCart.value?.let { chosenPhoto.value
+            shoppingCart.value = shoppingCart.value + chosenPhoto.value
+        }
+    }
+
+
 }
