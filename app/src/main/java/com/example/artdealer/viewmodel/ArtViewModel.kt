@@ -38,9 +38,19 @@ class ArtViewModel : ViewModel(){
 
     fun addToCart() {
         shoppingCart.value?.let { chosenPhoto.value
-            shoppingCart.value = shoppingCart.value + chosenPhoto.value
+            shoppingCart.value += chosenPhoto.value
         }
     }
 
+    fun removeFromCart(index: Int) {
+        if(index <= shoppingCart.value.size) {
+            val updatedCart = shoppingCart.value.toMutableList()
+            updatedCart.removeAt(index)
+            shoppingCart.value = updatedCart
+        }
+    }
 
+    fun emptyCart() {
+        shoppingCart.value = emptyList()
+    }
 }
