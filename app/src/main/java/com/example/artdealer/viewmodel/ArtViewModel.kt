@@ -9,22 +9,35 @@ import com.example.artdealer.data.FrameType
 import com.example.artdealer.data.Photo
 import com.example.artdealer.data.PhotoDataSource.loadPictures
 import com.example.artdealer.data.PhotoSize
+import com.example.artdealer.data.Screens
 import com.example.artdealer.data.SelectedPhoto
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 class ArtViewModel : ViewModel(){
-    var album = mutableStateOf(loadPictures())
-    var artists = mutableStateOf(loadArtists())
+    private val _album = MutableStateFlow(loadPictures())
+    val album: MutableStateFlow<List<Photo>> = _album
 
-    var filteredPhotos = mutableStateOf(album.value)
+    private val _artists = MutableStateFlow(loadArtists())
+    val artists: StateFlow<List<ArtistData>> = _artists
+
+    private val _filteredPhotos = MutableStateFlow(album.value)
+    val filteredPhotos: StateFlow<List<Photo>> = _filteredPhotos
+
+    private val _shoppingCart = MutableStateFlow<List<SelectedPhoto?>>(emptyList())
+    val shoppingCart: StateFlow<List<SelectedPhoto?>> = _shoppingCart
+
+    private val _currentScreen = MutableStateFlow(Screens.Home)
+    val currentScreen: StateFlow<Screens> = _currentScreen
+
     var chosenPhoto = mutableStateOf<SelectedPhoto?>(null)
-    var shoppingCart = mutableStateOf<List<SelectedPhoto?>>(emptyList())
 
     fun filterPhotosByCategory(category: Category) {
-        filteredPhotos.value = album.value.filter {it.category == category}
+        _filteredPhotos.value = _album.value.filter {it.category == category}
     }
 
     fun filterPhotosByArtist(artistData: ArtistData) {
-        filteredPhotos.value = album.value.filter {it.artist.id == artistData.id}
+        _filteredPhotos.value = _album.value.filter {it.artist.id == artistData.id}
     }
 
     fun selectedPhoto(photo: Photo, frame : FrameType = FrameType.WOOD, size: PhotoSize = PhotoSize.SMALL) {
@@ -37,20 +50,26 @@ class ArtViewModel : ViewModel(){
     }
 
     fun addToCart() {
-        shoppingCart.value?.let { chosenPhoto.value
-            shoppingCart.value += chosenPhoto.value
+        if(chosenPhoto.value != null) {
+            var tempCart = _shoppingCart.value.toMutableList()
+            tempCart += chosenPhoto.value
+            _shoppingCart.value = tempCart
         }
     }
 
     fun removeFromCart(index: Int) {
-        if(index <= shoppingCart.value.size) {
-            val updatedCart = shoppingCart.value.toMutableList()
+        if(index in shoppingCart.value.indices) {
+            val updatedCart = _shoppingCart.value.toMutableList()
             updatedCart.removeAt(index)
-            shoppingCart.value = updatedCart
+            _shoppingCart.value = updatedCart
         }
     }
 
     fun emptyCart() {
-        shoppingCart.value = emptyList()
+        _shoppingCart.value = emptyList()
+    }
+
+    fun navigateTo(screen: Screens) {
+        _currentScreen.value =screen
     }
 }
