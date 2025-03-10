@@ -67,6 +67,6 @@ class ArtViewModel : ViewModel(){
     }
 
     fun navigateTo(screen: Screens) {
-        _currentScreen.value =screen
+        _currentScreen.update { screen }
     }
 }
