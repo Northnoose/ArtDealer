@@ -13,19 +13,20 @@ import com.example.artdealer.data.Screens
 import com.example.artdealer.data.SelectedPhoto
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 
 class ArtViewModel : ViewModel(){
     private val _album = MutableStateFlow(loadPictures())
-    val album: MutableStateFlow<List<Photo>> = _album
+    val album: StateFlow<List<Photo>> = _album
 
     private val _artists = MutableStateFlow(loadArtists())
     val artists: StateFlow<List<ArtistData>> = _artists
 
-    private val _filteredPhotos = MutableStateFlow(album.value)
+    private val _filteredPhotos = MutableStateFlow(loadPictures())
     val filteredPhotos: StateFlow<List<Photo>> = _filteredPhotos
 
-    private val _shoppingCart = MutableStateFlow<List<SelectedPhoto?>>(emptyList())
-    val shoppingCart: StateFlow<List<SelectedPhoto?>> = _shoppingCart
+    private val _shoppingCart = MutableStateFlow<List<SelectedPhoto>>(emptyList())
+    val shoppingCart: StateFlow<List<SelectedPhoto>> = _shoppingCart
 
     private val _currentScreen = MutableStateFlow(Screens.Home)
     val currentScreen: StateFlow<Screens> = _currentScreen
@@ -40,7 +41,7 @@ class ArtViewModel : ViewModel(){
         _filteredPhotos.value = _album.value.filter {it.artist.id == artistData.id}
     }
 
-    fun selectedPhoto(photo: Photo, frame : FrameType = FrameType.WOOD, size: PhotoSize = PhotoSize.SMALL) {
+    fun selectPhoto(photo: Photo, frame : FrameType = FrameType.WOOD, size: PhotoSize = PhotoSize.SMALL) {
         chosenPhoto.value = SelectedPhoto(
             id = photo.id,
             frame = frame,
@@ -50,23 +51,19 @@ class ArtViewModel : ViewModel(){
     }
 
     fun addToCart() {
-        if(chosenPhoto.value != null) {
-            var tempCart = _shoppingCart.value.toMutableList()
-            tempCart += chosenPhoto.value
-            _shoppingCart.value = tempCart
+        chosenPhoto.value?.let { selectedPhoto ->
+            _shoppingCart.update { it + selectedPhoto }
         }
     }
 
     fun removeFromCart(index: Int) {
-        if(index in shoppingCart.value.indices) {
-            val updatedCart = _shoppingCart.value.toMutableList()
-            updatedCart.removeAt(index)
-            _shoppingCart.value = updatedCart
+        if (index in _shoppingCart.value.indices) {
+            _shoppingCart.update { it.toMutableList().apply { removeAt(index) } }
         }
     }
 
     fun emptyCart() {
-        _shoppingCart.value = emptyList()
+        _shoppingCart.update { emptyList() }
     }
 
     fun navigateTo(screen: Screens) {
