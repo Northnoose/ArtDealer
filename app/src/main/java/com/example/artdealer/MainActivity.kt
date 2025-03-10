@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.artdealer.ui.theme.ArtDealerTheme
+import com.example.artdealer.uiscreen.ArtDealerNavGraph
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,13 +21,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             ArtDealerTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Androi",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    ArtDealerNavGraph()
                 }
             }
         }
+
     }
 }
 
