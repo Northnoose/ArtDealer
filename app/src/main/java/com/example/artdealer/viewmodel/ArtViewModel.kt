@@ -6,6 +6,7 @@ import com.example.artdealer.data.ArtistData
 import com.example.artdealer.data.ArtistDataSource.loadArtists
 import com.example.artdealer.data.Category
 import com.example.artdealer.data.FrameType
+import com.example.artdealer.data.FrameWidth
 import com.example.artdealer.data.Photo
 import com.example.artdealer.data.PhotoDataSource.loadPictures
 import com.example.artdealer.data.PhotoSize
@@ -31,6 +32,18 @@ class ArtViewModel : ViewModel(){
     private val _currentScreen = MutableStateFlow(Screens.Home)
     val currentScreen: StateFlow<Screens> = _currentScreen
 
+    private val _selectedFrameType = MutableStateFlow(FrameType.WOOD)
+    val selectedFrameType: StateFlow<FrameType> = _selectedFrameType
+
+    private val _selectedFrameWidth = MutableStateFlow(FrameWidth.SMALL)
+    val selectedFrameWidth: StateFlow<FrameWidth> = _selectedFrameWidth
+
+    private val _selectedPhotoSize = MutableStateFlow(PhotoSize.SMALL)
+    val selectedPhotoSize: StateFlow<PhotoSize> = _selectedPhotoSize
+
+    private val _finalPrice = MutableStateFlow(0f)
+    val finalPrice: StateFlow<Float> = _finalPrice
+
     var chosenPhoto = mutableStateOf<SelectedPhoto?>(null)
 
     fun filterPhotosByCategory(category: Category) {
@@ -41,12 +54,34 @@ class ArtViewModel : ViewModel(){
         _filteredPhotos.value = _album.value.filter {it.artist.id == artistData.id}
     }
 
-    fun selectPhoto(photo: Photo, frame : FrameType = FrameType.WOOD, size: PhotoSize = PhotoSize.SMALL) {
+    private fun updateFinalPrice() {
+        _finalPrice.value = _selectedFrameType.value.extraPrice +
+                _selectedFrameWidth.value.extraPrice +
+                _selectedPhotoSize.value.extraPrice
+    }
+
+    fun setFrameType(frameType: FrameType) {
+        _selectedFrameType.value = frameType
+        updateFinalPrice()
+    }
+
+    fun setFrameWidth(frameWidth: FrameWidth) {
+        _selectedFrameWidth.value = frameWidth
+        updateFinalPrice()
+    }
+
+    fun setPhotoSize(size: PhotoSize) {
+        _selectedPhotoSize.value = size
+        updateFinalPrice()
+    }
+
+    fun selectPhoto(photo: Photo, frame : FrameType = FrameType.WOOD, frameWidth: FrameWidth = FrameWidth.SMALL, size: PhotoSize = PhotoSize.SMALL) {
         chosenPhoto.value = SelectedPhoto(
-            id = photo.id,
-            frame = frame,
-            size = size,
-            price = frame.extraPrice + size.extraPrice + photo.price,
+            photo = photo.id,
+            frameType = frame,
+            frameWidth = frameWidth,
+            photoSize = size,
+            photoPrice = photo.price
         )
     }
 
@@ -65,6 +100,7 @@ class ArtViewModel : ViewModel(){
     fun emptyCart() {
         _shoppingCart.update { emptyList() }
     }
+
 
     fun navigateTo(screen: Screens) {
         _currentScreen.update { screen }

@@ -1,9 +1,9 @@
 package com.example.artdealer.data
 
 data class SelectedPhoto(
-    val photo: Photo,
+    val photo: Long,
     val frameType: FrameType,
-    val frameWidth: Int,
+    val frameWidth: FrameWidth,
     val photoSize: PhotoSize,
-    val finalPrice: Float
+    val photoPrice: Float?
 )

@@ -16,13 +16,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.artdealer.CartViewModel
+import com.example.artdealer.data.SelectedPhoto
+import com.example.artdealer.viewmodel.ArtViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
-    cartViewModel: CartViewModel
+    viewModel: ArtViewModel
 ) {
     Scaffold(
         topBar = {
@@ -49,7 +50,7 @@ fun HomeScreen(
             )
         },
         bottomBar = {
-            if (cartViewModel.itemCount == 0) {
+            if (viewModel.itemCount == 0) {
 
                 BottomBar(
                     itemCount = 0,
@@ -61,7 +62,7 @@ fun HomeScreen(
             } else {
 
                 CheckoutBar(
-                    cartViewModel = cartViewModel
+                    viewModel = ArtViewModel()
                 )
             }
         }
@@ -103,7 +104,7 @@ fun HomeScreen(
 
 @Composable
 fun BottomBar(
-    itemCount: Int,
+    itemCount: List<SelectedPhoto>,
     totalPrice: Float,
     onPayClicked: () -> Unit
 ) {
@@ -178,10 +179,10 @@ fun BottomBar(
 
 @Composable
 fun CheckoutBar(
-    cartViewModel: CartViewModel
+    viewModel: ArtViewModel
 ) {
-    val itemCount = cartViewModel.itemCount
-    val totalPrice = cartViewModel.totalPrice
+    val itemCount = viewModel.itemCount
+    val totalPrice = viewModel.totalPrice
 
     Surface(
         modifier = Modifier
@@ -207,7 +208,7 @@ fun CheckoutBar(
             Spacer(Modifier.height(8.dp))
 
 
-            cartViewModel.selectedPhotos.forEach { selected ->
+            viewModel.selectedPhotos.forEach { selected ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -240,7 +241,7 @@ fun CheckoutBar(
                             color = Color.DarkGray
                         )
                     }
-                    IconButton(onClick = { cartViewModel.removeSelectedPhoto(selected) }) {
+                    IconButton(onClick = { viewModel.removeSelectedPhoto(selected) }) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Fjern bilde"
@@ -287,7 +288,7 @@ fun CheckoutBar(
 
             Button(
                 onClick = {
-                    cartViewModel.clearCart()
+                    viewModel.clearCart()
 
                 },
                 modifier = Modifier.fillMaxWidth()

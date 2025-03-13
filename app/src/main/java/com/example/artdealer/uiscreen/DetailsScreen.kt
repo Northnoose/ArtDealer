@@ -1,12 +1,12 @@
 package com.example.artdealer.uiscreen
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,28 +19,25 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.artdealer.CartViewModel
 import com.example.artdealer.data.*
+import com.example.artdealer.viewmodel.ArtViewModel
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailsScreen(
     navController: NavController,
-    cartViewModel: CartViewModel,
+    viewModel: ArtViewModel,
     // For testing, vi henter første bilde om ingen photo ble sendt inn via navigasjon
     photo: Photo = PhotoDataSource.loadPictures().first()
 ) {
 
-    var selectedFrameType by remember { mutableStateOf(FrameType.WOOD) }
-    var selectedFrameWidth by remember { mutableIntStateOf(10) }
-    var selectedPhotoSize by remember { mutableStateOf(PhotoSize.SMALL) }
+    val selectedFrameType by viewModel.selectedFrameType.collectAsState()
+    val selectedFrameWidth by viewModel.selectedFrameWidth.collectAsState()
+    val selectedPhotoSize by viewModel.selectedPhotoSize.collectAsState()
 
-
-    val singleItemPrice = photo.price +
-            selectedFrameType.extraPrice +
-            selectedPhotoSize.extraPrice +
-            (selectedFrameWidth * 5)
-
+    val singleItemPrice by viewModel.finalPrice.collectAsState()
+    val cartSize by viewModel.shoppingCart.collectAsState()
 
     Scaffold(
         topBar = {
@@ -68,8 +65,8 @@ fun DetailsScreen(
         },
         bottomBar = {
             BottomBar(
-                itemCount = cartViewModel.itemCount,
-                totalPrice = cartViewModel.totalPrice,
+                itemCount = cartSize,
+                totalPrice = singleItemPrice,
                 onPayClicked = { navController.navigate("home") }
             )
         }
@@ -104,14 +101,14 @@ fun DetailsScreen(
                         modifier = Modifier
                             .selectable(
                                 selected = (frameType == selectedFrameType),
-                                onClick = { selectedFrameType = frameType }
+                                onClick = { viewModel.setFrameType(frameType) }
                             )
                             .padding(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
                             selected = (frameType == selectedFrameType),
-                            onClick = { selectedFrameType = frameType }
+                            onClick = { viewModel.setFrameType(frameType) }
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(frameType.name, fontSize = 16.sp)
@@ -123,24 +120,23 @@ fun DetailsScreen(
 
 
             Text("Velg rammens bredde (mm):", fontSize = 18.sp)
-            val frameWidths = listOf(10, 15, 20)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                frameWidths.forEach { width ->
+                FrameWidth.entries.forEach { width ->
                     Row(
                         modifier = Modifier
                             .selectable(
                                 selected = (width == selectedFrameWidth),
-                                onClick = { selectedFrameWidth = width }
+                                onClick = { viewModel.setFrameWidth(width) }
                             )
                             .padding(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
                             selected = (width == selectedFrameWidth),
-                            onClick = { selectedFrameWidth = width }
+                            onClick = { viewModel.setFrameWidth(width) }
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("$width", fontSize = 16.sp)
@@ -161,14 +157,14 @@ fun DetailsScreen(
                         modifier = Modifier
                             .selectable(
                                 selected = (size == selectedPhotoSize),
-                                onClick = { selectedPhotoSize = size }
+                                onClick = { viewModel.setPhotoSize(size) }
                             )
                             .padding(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
                             selected = (size == selectedPhotoSize),
-                            onClick = { selectedPhotoSize = size }
+                            onClick = { viewModel.setPhotoSize(size) }
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(size.name, fontSize = 16.sp)
@@ -180,7 +176,7 @@ fun DetailsScreen(
 
 
             Text(
-                text = "Pris for dette valget: ${singleItemPrice.toInt()},- Kr",
+                text = "Pris for dette valget: ${singleItemPrice + photo.price},- Kr",
                 fontSize = 18.sp,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 textAlign = TextAlign.Center
@@ -196,15 +192,13 @@ fun DetailsScreen(
                 Button(
                     onClick = {
 
-                        val selectedItem = SelectedPhoto(
+                        val selectedItem = viewModel.selectPhoto(
                             photo = photo,
-                            frameType = selectedFrameType,
+                            frame = selectedFrameType,
                             frameWidth = selectedFrameWidth,
-                            photoSize = selectedPhotoSize,
-                            finalPrice = singleItemPrice
+                            size = selectedPhotoSize,
                         )
-
-                        cartViewModel.addSelectedPhoto(selectedItem)
+                        viewModel.addToCart()
                     },
                     modifier = Modifier.weight(1f)
                 ) {

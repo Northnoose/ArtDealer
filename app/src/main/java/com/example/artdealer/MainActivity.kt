@@ -11,6 +11,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.artdealer.ui.theme.ArtDealerTheme
 import com.example.artdealer.uiscreen.ArtDealerNavGraph
+import com.example.artdealer.viewmodel.ArtViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,8 +19,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ArtDealerTheme {
-                val cartViewModel: CartViewModel = viewModel()
-                ArtDealerNavGraph(cartViewModel = cartViewModel) // starter med "gallery"
+                val viewModel: ArtViewModel = viewModel()
+                ArtDealerNavGraph(viewModel = viewModel) // starter med "gallery"
             }
         }
 
