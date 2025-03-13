@@ -5,7 +5,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.composable
 import com.example.artdealer.CartViewModel
 
-
 @Composable
 fun ArtDealerNavGraph(
     cartViewModel: CartViewModel,
