@@ -2,13 +2,37 @@ package com.example.artdealer.uiscreen
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,8 +43,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.artdealer.data.*
+import com.example.artdealer.data.FrameType
+import com.example.artdealer.data.FrameWidth
+import com.example.artdealer.data.Photo
+import com.example.artdealer.data.PhotoDataSource
+import com.example.artdealer.data.PhotoSize
 import com.example.artdealer.viewmodel.ArtViewModel
+import kotlinx.coroutines.launch
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,7 +57,7 @@ import com.example.artdealer.viewmodel.ArtViewModel
 fun DetailsScreen(
     navController: NavController,
     viewModel: ArtViewModel,
-    // For testing, vi henter første bilde om ingen photo ble sendt inn via navigasjon
+    // For test, vi hentea første bilde om ingen photo ble sendt via navig
     photo: Photo = PhotoDataSource.loadPictures().first()
 ) {
 
@@ -36,8 +65,10 @@ fun DetailsScreen(
     val selectedFrameWidth by viewModel.selectedFrameWidth.collectAsState()
     val selectedPhotoSize by viewModel.selectedPhotoSize.collectAsState()
 
-    val singleItemPrice by viewModel.finalPrice.collectAsState()
-    val cartSize by viewModel.shoppingCart.collectAsState()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -54,6 +85,7 @@ fun DetailsScreen(
                 title = {
                     Text(
                         text = "Tilpass",
+                        color = Color.Black,
                         fontSize = 24.sp
                     )
                 },
@@ -63,12 +95,9 @@ fun DetailsScreen(
                 )
             )
         },
-        bottomBar = {
-            BottomBar(
-                itemCount = cartSize,
-                totalPrice = singleItemPrice,
-                onPayClicked = { navController.navigate("home") }
-            )
+
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
         }
     ) { innerPadding ->
 
@@ -174,15 +203,16 @@ fun DetailsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-
+            // Vise prisen for dette valget
+            val selectionPrice = viewModel.calculateSelectionPrice(photo)
             Text(
-                text = "Pris for dette valget: ${singleItemPrice + photo.price},- Kr",
+                text = "Pris for dette valget: $selectionPrice,- Kr",
                 fontSize = 18.sp,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(65.dp))
 
 
             Row(
@@ -192,19 +222,29 @@ fun DetailsScreen(
                 Button(
                     onClick = {
 
-                        val selectedItem = viewModel.selectPhoto(
+                        viewModel.selectPhoto(
                             photo = photo,
                             frame = selectedFrameType,
                             frameWidth = selectedFrameWidth,
                             size = selectedPhotoSize,
                         )
                         viewModel.addToCart()
+
+
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = "Vare lagt til i handlekurven",
+                                duration = SnackbarDuration.Short
+                            )
+                        }
                     },
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("Legg til", fontSize = 18.sp)
                 }
+
                 Spacer(modifier = Modifier.width(16.dp))
+
                 Button(
                     onClick = { navController.navigate("home") },
                     modifier = Modifier.weight(1f)

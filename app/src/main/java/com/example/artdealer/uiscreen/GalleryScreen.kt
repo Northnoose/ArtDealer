@@ -26,11 +26,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -38,19 +39,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.artdealer.data.Photo
+import com.example.artdealer.viewmodel.ArtViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GalleryScreen(
     navController: NavController,
-    photos: List<Photo>,
+    viewModel: ArtViewModel,
     title: String = "Bilder"
 ) {
+
+    val filteredPhotos by viewModel.filteredPhotos.collectAsState()
+
     Scaffold(
         topBar = {
             TopAppBar(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)),
+                modifier = Modifier.clip(RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)),
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(
@@ -71,8 +75,7 @@ fun GalleryScreen(
                     titleContentColor = Color.Black
                 )
             )
-        },
-
+        }
     ) { innerPadding ->
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
@@ -83,11 +86,12 @@ fun GalleryScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            items(photos) { photo ->
+            items(filteredPhotos) { photo ->
                 PhotoCard(
                     photo = photo,
                     onClick = {
-                        // TODO: navController.navigate("details/${photo.id}")
+                        // Eksempel: Navigasjon til detaljer-skjermen
+                        // navController.navigate("details/${photo.id}")
                     }
                 )
             }
@@ -100,29 +104,27 @@ fun PhotoCard(
     photo: Photo,
     onClick: () -> Unit
 ) {
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .border(width = 4.dp, color = Color.Yellow, shape = RectangleShape),
+                .border(width = 4.dp, color = Color.Yellow, shape = RoundedCornerShape(4.dp)),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
             onClick = onClick
         ) {
+            //
             Image(
                 painter = painterResource(id = photo.imageID),
                 contentDescription = photo.title,
                 modifier = Modifier.fillMaxSize()
             )
         }
-
 
         Text(
             text = photo.title,

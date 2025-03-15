@@ -39,7 +39,7 @@ fun ArtistsScreen() {
                         )
                     }
                 },
-                colors = TopAppBarDefaults.smallTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFFFFA84E),
                     titleContentColor = Color.Black
                 )

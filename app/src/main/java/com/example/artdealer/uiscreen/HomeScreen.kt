@@ -1,23 +1,49 @@
 package com.example.artdealer.uiscreen
 
-
-import androidx.compose.foundation.layout.*
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.artdealer.data.SelectedPhoto
 import com.example.artdealer.viewmodel.ArtViewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,12 +51,15 @@ fun HomeScreen(
     navController: NavController,
     viewModel: ArtViewModel
 ) {
+
+    val shoppingCart by viewModel.shoppingCart.collectAsState()
+    val itemCount = shoppingCart.size
+    val totalPrice = viewModel.totalPrice
+
     Scaffold(
         topBar = {
             TopAppBar(
-                modifier = Modifier.clip(
-                    RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)
-                ),
+                modifier = Modifier.clip(RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)),
                 title = {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
@@ -50,29 +79,22 @@ fun HomeScreen(
             )
         },
         bottomBar = {
-            if (viewModel.itemCount == 0) {
-
-                BottomBar(
-                    itemCount = 0,
-                    totalPrice = 0f,
-                    onPayClicked = {
-
-                    }
-                )
-            } else {
-
-                CheckoutBar(
-                    viewModel = ArtViewModel()
-                )
-            }
+            BottomBar(
+                shoppingCart = shoppingCart,
+                itemCount = itemCount,
+                totalPrice = totalPrice,
+                onRemoveItem = { index -> viewModel.removeFromCart(index) },
+                onRemoveAllItems = { viewModel.clearCart() }
+            )
         }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(top = 32.dp, start = 16.dp, end = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
                 text = "Velg Bilde basert på",
@@ -80,115 +102,89 @@ fun HomeScreen(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+            Button(
+                onClick = {
+
+                },
+                modifier = Modifier
+                    .fillMaxWidth(0.95f)
+                    .height(56.dp)
             ) {
-                Button(onClick = {
+                Text(text = "Kunstner", fontSize = 20.sp)
+            }
+            Button(
+                onClick = {
 
-                }) {
-                    Text(text = "Kunstner", fontSize = 20.sp)
-                }
-                Button(onClick = {
-
-                }) {
-                    Text(text = "Kategori", fontSize = 20.sp)
-                }
+                },
+                modifier = Modifier
+                    .fillMaxWidth(0.95f)
+                    .height(56.dp)
+            ) {
+                Text(text = "Kategori", fontSize = 20.sp)
             }
         }
     }
 }
 
-
-
 @Composable
 fun BottomBar(
-    itemCount: List<SelectedPhoto>,
+    shoppingCart: List<SelectedPhoto>,
+    itemCount: Int,
     totalPrice: Float,
-    onPayClicked: () -> Unit
+    onRemoveItem: (Int) -> Unit,
+    onRemoveAllItems: () -> Unit
 ) {
-
-    val formattedPrice = "${totalPrice.toInt()},- Kr"
-    val buttonText = if (itemCount == 0) {
-        "Ingen varer i kurven"
+    if (itemCount == 0) {
+        EmptyCartBar()
     } else {
-        "Betal $formattedPrice"
+        CheckoutBar(
+            shoppingCart = shoppingCart,
+            itemCount = itemCount,
+            totalPrice = totalPrice,
+            onRemoveItem = onRemoveItem,
+            onRemoveAllItems = onRemoveAllItems
+        )
     }
+}
 
+@Composable
+fun EmptyCartBar() {
     Surface(
-        modifier = Modifier
-            .clip(
-
-                RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp)
-            ),
+        modifier = Modifier.fillMaxWidth(),
         shadowElevation = 8.dp,
-
-        color = Color(0xFFFFA84E).copy(alpha = 1f)
+        color = Color(0xFFFFA84E)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Antall bilder valgt:",
-                    fontSize = 16.sp,
-                    color = Color.Black
-                )
-                Text(
-                    text = "$itemCount",
-                    fontSize = 16.sp,
-                    color = Color.Black
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Totalpris:",
-                    fontSize = 16.sp,
-                    color = Color.Black
-                )
-                Text(
-                    text = formattedPrice,
-                    fontSize = 16.sp,
-                    color = Color.Black
-                )
-            }
-            Button(
-                onClick = onPayClicked,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                enabled = itemCount > 0
-            ) {
-                Text(
-                    text = buttonText,
-                    fontSize = 20.sp
-                )
-            }
+            Text("Ingen varer i kurven", fontSize = 18.sp, color = Color.Black)
         }
     }
 }
 
 @Composable
 fun CheckoutBar(
-    viewModel: ArtViewModel
+    shoppingCart: List<SelectedPhoto>,
+    itemCount: Int,
+    totalPrice: Float,
+    onRemoveItem: (Int) -> Unit,
+    onRemoveAllItems: () -> Unit
 ) {
-    val itemCount = viewModel.itemCount
-    val totalPrice = viewModel.totalPrice
+    var paymentDone by remember { mutableStateOf(false) }
+
+    LaunchedEffect(paymentDone) {
+        if (paymentDone) {
+            delay(2000)
+            onRemoveAllItems()
+            paymentDone = false
+        }
+    }
 
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 100.dp)
-            .clip(RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp)),
+        modifier = Modifier.fillMaxWidth(),
         shadowElevation = 8.dp,
         color = Color(0xFFFFA84E)
     ) {
@@ -208,7 +204,15 @@ fun CheckoutBar(
             Spacer(Modifier.height(8.dp))
 
 
-            viewModel.selectedPhotos.forEach { selected ->
+            shoppingCart.forEachIndexed { index, selected ->
+                if (index > 0) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        thickness = 1.dp,
+                        color = Color.Gray.copy(alpha = 0.5f)
+                    )
+                }
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -216,32 +220,25 @@ fun CheckoutBar(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
                     Column {
-
                         Text(
                             text = "${selected.photo.category} | " +
-                                    "${selected.photo.artist.name} " +
-                                    selected.photo.artist.familyName,
-                            fontSize = 16.sp,
-                            color = Color.Black
+                                    "${selected.photo.artist.name} ${selected.photo.artist.familyName}",
+                            fontSize = 16.sp
                         )
-
                         Text(
-                            text = "${selected.frameType.name}, " +
-                                    "${selected.frameWidth} mm, " +
-                                    selected.photoSize.name,
-                            fontSize = 16.sp,
-                            color = Color.Black
+                            text = "${selected.frameType.name}, ${selected.frameWidth.name}, ${selected.photoSize.name}",
+                            fontSize = 14.sp
                         )
-
                         Text(
                             text = selected.photo.title,
-                            fontSize = 14.sp,
-                            color = Color.DarkGray
+                            fontSize = 14.sp
                         )
                     }
-                    IconButton(onClick = { viewModel.removeSelectedPhoto(selected) }) {
+                    IconButton(onClick = {
+                        val indexToRemove = shoppingCart.indexOf(selected)
+                        if (indexToRemove != -1) onRemoveItem(indexToRemove)
+                    }) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Fjern bilde"
@@ -256,44 +253,38 @@ fun CheckoutBar(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = "Antall bilder valgt:",
-                    fontSize = 16.sp,
-                    color = Color.Black
-                )
-                Text(
-                    text = "$itemCount",
-                    fontSize = 16.sp,
-                    color = Color.Black
-                )
+                Text("Antall bilder valgt:")
+                Text("$itemCount")
             }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = "Totalpris:",
-                    fontSize = 16.sp,
-                    color = Color.Black
-                )
-                Text(
-                    text = "${totalPrice.toInt()},- Kr",
-                    fontSize = 16.sp,
-                    color = Color.Black
-                )
+                Text("Totalpris:")
+                Text("${totalPrice.toInt()},- Kr")
             }
 
             Spacer(Modifier.height(8.dp))
 
+            val darkGreen = Color(0xFF2E7D32)
+            val buttonColor by animateColorAsState(
+                targetValue = if (paymentDone) darkGreen else MaterialTheme.colorScheme.primary,
+                animationSpec = tween(durationMillis = 500)
+            )
+
             Button(
                 onClick = {
-                    viewModel.clearCart()
-
+                    paymentDone = true
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = buttonColor)
             ) {
-                Text(text = "Betal ${totalPrice.toInt()},- Kr", fontSize = 18.sp)
+                Text(
+                    text = if (paymentDone) "Betaling utført" else "Betal ${totalPrice.toInt()},- Kr",
+                    fontSize = 18.sp,
+                    color = Color.White
+                )
             }
         }
     }

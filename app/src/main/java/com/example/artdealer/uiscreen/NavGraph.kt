@@ -13,18 +13,24 @@ fun ArtDealerNavGraph(
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = startDestination) {
         composable("home") {
-            HomeScreen(navController = navController, cartViewModel = viewModel)
+            HomeScreen(navController = navController, viewModel = viewModel)
         }
-        composable("home") {
-            ArtistsScreen(navController = navController, cartViewModel = viewModel)
-        }
+
+        //composable("artist") {
+        //    ArtistsScreen(navController = navController, viewModel = viewModel)
+        //}
+
+        //composable("category") {
+        //    CategoryScreen(navController = navController, viewModel = viewModel)
+        //}
+
         composable("details") {
-            DetailsScreen(navController = navController, cartViewModel = viewModel)
+            DetailsScreen(navController = navController, viewModel = viewModel)
         }
+
+
         composable("gallery") {
-            val allPhotos = com.example.artdealer.data.PhotoDataSource.loadPictures()
-            GalleryScreen(navController = navController, photos = allPhotos, title = "Bilder")
+            GalleryScreen(navController = navController, viewModel = viewModel, title = "Bilder")
         }
     }
 }
-

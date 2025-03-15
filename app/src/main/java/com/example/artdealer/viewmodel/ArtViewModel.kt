@@ -41,47 +41,48 @@ class ArtViewModel : ViewModel(){
     private val _selectedPhotoSize = MutableStateFlow(PhotoSize.SMALL)
     val selectedPhotoSize: StateFlow<PhotoSize> = _selectedPhotoSize
 
-    private val _finalPrice = MutableStateFlow(0f)
-    val finalPrice: StateFlow<Float> = _finalPrice
-
     var chosenPhoto = mutableStateOf<SelectedPhoto?>(null)
 
     fun filterPhotosByCategory(category: Category) {
-        _filteredPhotos.value = _album.value.filter {it.category == category}
+        _filteredPhotos.value = _album.value.filter { it.category == category }
     }
 
     fun filterPhotosByArtist(artistData: ArtistData) {
-        _filteredPhotos.value = _album.value.filter {it.artist.id == artistData.id}
-    }
-
-    private fun updateFinalPrice() {
-        _finalPrice.value = _selectedFrameType.value.extraPrice +
-                _selectedFrameWidth.value.extraPrice +
-                _selectedPhotoSize.value.extraPrice
+        _filteredPhotos.value = _album.value.filter { it.artist.id == artistData.id }
     }
 
     fun setFrameType(frameType: FrameType) {
         _selectedFrameType.value = frameType
-        updateFinalPrice()
     }
 
     fun setFrameWidth(frameWidth: FrameWidth) {
         _selectedFrameWidth.value = frameWidth
-        updateFinalPrice()
     }
 
     fun setPhotoSize(size: PhotoSize) {
         _selectedPhotoSize.value = size
-        updateFinalPrice()
     }
 
-    fun selectPhoto(photo: Photo, frame : FrameType = FrameType.WOOD, frameWidth: FrameWidth = FrameWidth.SMALL, size: PhotoSize = PhotoSize.SMALL) {
+    // Denne funksjonen regner ut totalprisen for ett valgt bilde
+    fun calculateSelectionPrice(photo: Photo): Float {
+        return photo.price +
+                _selectedFrameType.value.extraPrice +
+                _selectedFrameWidth.value.extraPrice +
+                _selectedPhotoSize.value.extraPrice
+    }
+
+    fun selectPhoto(
+        photo: Photo,
+        frame: FrameType = FrameType.WOOD,
+        frameWidth: FrameWidth = FrameWidth.SMALL,
+        size: PhotoSize = PhotoSize.SMALL
+    ) {
         chosenPhoto.value = SelectedPhoto(
-            photo = photo.id,
+            photo = photo,
             frameType = frame,
             frameWidth = frameWidth,
             photoSize = size,
-            photoPrice = photo.price
+            photoPrice = calculateSelectionPrice(photo)
         )
     }
 
@@ -97,10 +98,18 @@ class ArtViewModel : ViewModel(){
         }
     }
 
-    fun emptyCart() {
-        _shoppingCart.update { emptyList() }
+    fun clearCart() {
+        _shoppingCart.value = emptyList()
     }
 
+
+    val totalPrice: Float
+        get() = _shoppingCart.value.sumOf { selectedPhoto ->
+            (selectedPhoto.photo.price +
+                    selectedPhoto.frameType.extraPrice +
+                    selectedPhoto.frameWidth.extraPrice +
+                    selectedPhoto.photoSize.extraPrice).toDouble()
+        }.toFloat()
 
     fun navigateTo(screen: Screens) {
         _currentScreen.update { screen }
