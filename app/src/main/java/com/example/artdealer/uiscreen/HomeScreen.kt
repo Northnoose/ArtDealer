@@ -37,13 +37,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.artdealer.data.Screens
 import com.example.artdealer.data.SelectedPhoto
 import com.example.artdealer.viewmodel.ArtViewModel
 import kotlinx.coroutines.delay
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import com.example.artdealer.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,7 +72,7 @@ fun HomeScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Kunsthandler",
+                            text = stringResource(id = R.string.app_name),
                             color = Color.Black,
                             fontSize = 30.sp
                         )
@@ -97,30 +103,30 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Velg Bilde basert på",
+                text = stringResource(id = R.string.choose_image),
                 fontSize = 28.sp,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
             Button(
                 onClick = {
-
+                    navController.navigate(Screens.Artist.route)
                 },
                 modifier = Modifier
                     .fillMaxWidth(0.95f)
                     .height(56.dp)
             ) {
-                Text(text = "Kunstner", fontSize = 20.sp)
+                Text(text = stringResource(id = R.string.artist), fontSize = 20.sp)
             }
             Button(
                 onClick = {
-
+                    navController.navigate(Screens.Category.route)
                 },
                 modifier = Modifier
                     .fillMaxWidth(0.95f)
                     .height(56.dp)
             ) {
-                Text(text = "Kategori", fontSize = 20.sp)
+                Text(text = stringResource(id = R.string.category), fontSize = 20.sp)
             }
         }
     }
@@ -160,7 +166,7 @@ fun EmptyCartBar() {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Ingen varer i kurven", fontSize = 18.sp, color = Color.Black)
+            Text(stringResource(id = R.string.empty_cart), fontSize = 18.sp, color = Color.Black)
         }
     }
 }
@@ -174,6 +180,7 @@ fun CheckoutBar(
     onRemoveAllItems: () -> Unit
 ) {
     var paymentDone by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     LaunchedEffect(paymentDone) {
         if (paymentDone) {
@@ -195,7 +202,7 @@ fun CheckoutBar(
         ) {
 
             Text(
-                text = "CHECKOUT",
+                text = stringResource(id = R.string.checkout),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -235,15 +242,21 @@ fun CheckoutBar(
                             fontSize = 14.sp
                         )
                     }
-                    IconButton(onClick = {
-                        val indexToRemove = shoppingCart.indexOf(selected)
-                        if (indexToRemove != -1) onRemoveItem(indexToRemove)
-                    }) {
+                    IconButton(
+                        onClick = {
+                            val indexToRemove = shoppingCart.indexOf(selected)
+                            if (indexToRemove != -1) onRemoveItem(indexToRemove)
+                        },
+                        modifier = Modifier.semantics {
+                            contentDescription = context.getString(R.string.remove_picture)
+                        }
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = "Fjern bilde"
+                            contentDescription = null // ← ikke nødvendig å ha begge steder
                         )
                     }
+
                 }
             }
 
@@ -253,7 +266,7 @@ fun CheckoutBar(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Antall bilder valgt:")
+                Text(stringResource(id = R.string.item_count))
                 Text("$itemCount")
             }
 
@@ -261,7 +274,7 @@ fun CheckoutBar(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Totalpris:")
+                Text(stringResource(id = R.string.pay_price))
                 Text("${totalPrice.toInt()},- Kr")
             }
 
@@ -281,8 +294,11 @@ fun CheckoutBar(
                 colors = ButtonDefaults.buttonColors(containerColor = buttonColor)
             ) {
                 Text(
-                    text = if (paymentDone) "Betaling utført" else "Betal ${totalPrice.toInt()},- Kr",
-                    fontSize = 18.sp,
+                    text = if (paymentDone)
+                        stringResource(id = R.string.payment_done)
+                    else
+                        stringResource(id = R.string.pay_price, totalPrice.toInt()),
+                                fontSize = 18.sp,
                     color = Color.White
                 )
             }

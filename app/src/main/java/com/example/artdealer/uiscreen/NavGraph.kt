@@ -1,36 +1,45 @@
 package com.example.artdealer.uiscreen
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.composable
+import com.example.artdealer.data.Screens
 import com.example.artdealer.viewmodel.ArtViewModel
+
 
 @Composable
 fun ArtDealerNavGraph(
     viewModel: ArtViewModel,
-    startDestination: String = "details"
+    startDestination: Screens = Screens.Home
 ) {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = startDestination) {
-        composable("home") {
+
+    NavHost(navController = navController, startDestination = startDestination.route) {
+        composable(Screens.Home.route) {
             HomeScreen(navController = navController, viewModel = viewModel)
         }
-
-        //composable("artist") {
-        //    ArtistsScreen(navController = navController, viewModel = viewModel)
-        //}
-
-        //composable("category") {
-        //    CategoryScreen(navController = navController, viewModel = viewModel)
-        //}
-
-        composable("details") {
-            DetailsScreen(navController = navController, viewModel = viewModel)
+        composable(Screens.Artist.route) {
+            ArtistsScreen(navController = navController, viewModel = viewModel)
         }
+        composable(Screens.Category.route) {
+            CategoryScreen(navController = navController, viewModel = viewModel)
+        }
+        composable(Screens.Gallery.route) {
+            GalleryScreen(navController = navController, viewModel = viewModel)
+        }
+        composable(Screens.DetailedView.route) { backStackEntry ->
+            val photoId = backStackEntry.arguments?.getString("photoId")?.toLongOrNull()
+            val album = viewModel.album.collectAsState(initial = emptyList()).value
+            val photo = album.find { it.id == photoId }
 
-
-        composable("gallery") {
-            GalleryScreen(navController = navController, viewModel = viewModel, title = "Bilder")
+            photo?.let {
+                DetailsScreen(navController = navController, viewModel = viewModel, photo = it)
+            }
         }
     }
 }
+
+
+

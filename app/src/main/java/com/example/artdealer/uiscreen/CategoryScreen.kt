@@ -13,8 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.artdealer.viewmodel.ArtViewModel
-import com.example.artdealer.data.ArtistDataSource
-import com.example.artdealer.data.ArtistData
+import com.example.artdealer.data.Category
 import com.example.artdealer.data.Screens
 import androidx.compose.ui.res.stringResource
 import com.example.artdealer.R
@@ -22,7 +21,7 @@ import com.example.artdealer.R
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun ArtistsScreen(
+fun CategoryScreen(
     navController: NavController,
     viewModel: ArtViewModel
 ) {
@@ -31,8 +30,7 @@ fun ArtistsScreen(
             TopAppBar(
                 modifier = Modifier.clip(RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)),
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp()
-                    }) {
+                    IconButton(onClick = {  navController.navigateUp() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back)
@@ -41,7 +39,7 @@ fun ArtistsScreen(
                 },
                 title = {
                     Text(
-                        text = stringResource(R.string.choose_artist),
+                        text = stringResource(R.string.choose_category),
                         color = Color.Black,
                         fontSize = 24.sp
                     )
@@ -53,8 +51,7 @@ fun ArtistsScreen(
             )
         },
         content = { paddingValues ->
-            ArtistList(
-                artists = ArtistDataSource.loadArtists(),
+            CategoryList(
                 modifier = Modifier.padding(paddingValues),
                 viewModel = viewModel,
                 navController
@@ -64,8 +61,7 @@ fun ArtistsScreen(
 }
 
 @Composable
-fun ArtistList(
-    artists: List<ArtistData>,
+fun CategoryList(
     modifier: Modifier = Modifier,
     viewModel: ArtViewModel,
     navController: NavController
@@ -76,27 +72,27 @@ fun ArtistList(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        artists.forEach { artist ->
-            ArtistButton(artist, viewModel, navController)
+        Category.entries.forEach { category ->
+            CategoryButton(category, viewModel, navController)
         }
     }
 }
 
 @Composable
-fun ArtistButton(
-    artist: ArtistData,
+fun CategoryButton(
+    category: Category,
     viewModel: ArtViewModel,
     navController: NavController
 ) {
     Button(
         onClick = {
-            viewModel.filterPhotosByArtist(artist) // Filtrer bilder basert på kunstner
+            viewModel.filterPhotosByCategory(category)
             navController.navigate(Screens.Gallery.route)
         },
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA84E))
     ) {
-        Text(text = "${artist.name} ${artist.familyName}", color = Color.Black, fontSize = 18.sp)
+        Text(text = category.name, color = Color.Black, fontSize = 18.sp)
     }
 }

@@ -1,3 +1,30 @@
 <resources>
-    <string name="app_name">ArtDealer</string>
+    <string name="app_name">Kunsthandler</string>
+    <string name="choose_image">Velg Bilde basert på</string>
+    <string name="artist">Kunstner</string>
+    <string name="category">Kategori</string>
+    <string name="empty_cart">Ingen varer i kurven</string>
+    <string name="checkout">CHECKOUT</string>
+    <string name="item_count">Antall bilder valgt:</string>
+    <string name="total_price">Totalpris:</string>
+    <string name="payment_done">Betaling utført</string>
+    <string name="pay_price">Betal %1$d,- Kr</string>
+    <string name="pictures">Bilder</string>
+    <string name="back">Tilbake</string>
+    <string name="remove_picture">Fjern bilde</string>
+
+    <string name="customize">Tilpass</string>
+    <string name="image_not_found">Bilde ikke funnet</string>
+    <string name="choose_frame_quality">Velg rammekvalitet:</string>
+    <string name="choose_frame_width">Velg rammens bredde (mm):</string>
+    <string name="choose_photo_size">Velg bildestørrelse:</string>
+    <string name="price_label">Pris for dette valget: </string>
+    <string name="item_added">Vare lagt til i handlekurven</string>
+    <string name="add_to_cart">Legg til</string>
+    <string name="home">Hjem</string>
+
+    <string name="choose_category">Velg en kategori</string>
+    <string name="choose_artist">Velg en artist</string>
+    <string name="updated_photos">Updated photos:</string>
+
 </resources>

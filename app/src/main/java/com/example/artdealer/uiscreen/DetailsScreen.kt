@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -48,27 +49,33 @@ import com.example.artdealer.data.FrameWidth
 import com.example.artdealer.data.Photo
 import com.example.artdealer.data.PhotoDataSource
 import com.example.artdealer.data.PhotoSize
+import com.example.artdealer.data.Screens
 import com.example.artdealer.viewmodel.ArtViewModel
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.example.artdealer.R
 
-@SuppressLint("StateFlowValueCalledInComposition")
+// DetailsScreen.kt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailsScreen(
     navController: NavController,
     viewModel: ArtViewModel,
-    // For test, vi hentea første bilde om ingen photo ble sendt via navig
-    photo: Photo = PhotoDataSource.loadPictures().first()
+    photo: Photo?
 ) {
+    if (photo == null) {
+        Text(stringResource(R.string.image_not_found), fontSize = 20.sp, color = Color.Red)
+        return
+    }
 
     val selectedFrameType by viewModel.selectedFrameType.collectAsState()
     val selectedFrameWidth by viewModel.selectedFrameWidth.collectAsState()
     val selectedPhotoSize by viewModel.selectedPhotoSize.collectAsState()
 
-
     val snackbarHostState = remember { SnackbarHostState() }
-
     val coroutineScope = rememberCoroutineScope()
+
+    val itemAdded = stringResource(R.string.item_added)
 
     Scaffold(
         topBar = {
@@ -78,13 +85,13 @@ fun DetailsScreen(
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Tilbake"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
                 title = {
                     Text(
-                        text = "Tilpass",
+                        text = stringResource(R.string.customize),
                         color = Color.Black,
                         fontSize = 24.sp
                     )
@@ -107,7 +114,6 @@ fun DetailsScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-
             Image(
                 painter = painterResource(id = photo.imageID),
                 contentDescription = photo.title,
@@ -119,10 +125,11 @@ fun DetailsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-
-            Text("Velg rammekvalitet:", fontSize = 18.sp)
+            Text(stringResource(R.string.choose_frame_quality), fontSize = 18.sp)
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("FrameTypeOptions"),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 FrameType.entries.forEach { frameType ->
@@ -147,10 +154,11 @@ fun DetailsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-
-            Text("Velg rammens bredde (mm):", fontSize = 18.sp)
+            Text(stringResource(R.string.choose_frame_width), fontSize = 18.sp)
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("FrameWidthOptions"),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 FrameWidth.entries.forEach { width ->
@@ -175,10 +183,11 @@ fun DetailsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-
-            Text("Velg bildestørrelse:", fontSize = 18.sp)
+            Text(stringResource(R.string.choose_photo_size), fontSize = 18.sp)
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("PhotoSizeOptions"),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 PhotoSize.entries.forEach { size ->
@@ -203,10 +212,9 @@ fun DetailsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Vise prisen for dette valget
             val selectionPrice = viewModel.calculateSelectionPrice(photo)
             Text(
-                text = "Pris for dette valget: $selectionPrice,- Kr",
+                text = stringResource(R.string.price_label, selectionPrice),
                 fontSize = 18.sp,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 textAlign = TextAlign.Center
@@ -214,14 +222,12 @@ fun DetailsScreen(
 
             Spacer(modifier = Modifier.height(65.dp))
 
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Button(
                     onClick = {
-
                         viewModel.selectPhoto(
                             photo = photo,
                             frame = selectedFrameType,
@@ -230,26 +236,25 @@ fun DetailsScreen(
                         )
                         viewModel.addToCart()
 
-
                         coroutineScope.launch {
                             snackbarHostState.showSnackbar(
-                                message = "Vare lagt til i handlekurven",
+                                message = itemAdded,
                                 duration = SnackbarDuration.Short
                             )
                         }
                     },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Legg til", fontSize = 18.sp)
+                    Text(stringResource(R.string.add_to_cart), fontSize = 18.sp)
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
 
                 Button(
-                    onClick = { navController.navigate("home") },
+                    onClick = { navController.navigate(Screens.Home.route) },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Hjem", fontSize = 18.sp)
+                    Text(stringResource(R.string.home), fontSize = 18.sp)
                 }
             }
         }

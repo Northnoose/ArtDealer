@@ -20,17 +20,11 @@ class ArtViewModel : ViewModel(){
     private val _album = MutableStateFlow(loadPictures())
     val album: StateFlow<List<Photo>> = _album
 
-    private val _artists = MutableStateFlow(loadArtists())
-    val artists: StateFlow<List<ArtistData>> = _artists
-
     private val _filteredPhotos = MutableStateFlow(loadPictures())
     val filteredPhotos: StateFlow<List<Photo>> = _filteredPhotos
 
     private val _shoppingCart = MutableStateFlow<List<SelectedPhoto>>(emptyList())
     val shoppingCart: StateFlow<List<SelectedPhoto>> = _shoppingCart
-
-    private val _currentScreen = MutableStateFlow(Screens.Home)
-    val currentScreen: StateFlow<Screens> = _currentScreen
 
     private val _selectedFrameType = MutableStateFlow(FrameType.WOOD)
     val selectedFrameType: StateFlow<FrameType> = _selectedFrameType
@@ -44,11 +38,17 @@ class ArtViewModel : ViewModel(){
     var chosenPhoto = mutableStateOf<SelectedPhoto?>(null)
 
     fun filterPhotosByCategory(category: Category) {
-        _filteredPhotos.value = _album.value.filter { it.category == category }
+        val filteredList = _album.value.filter { it.category == category }
+        _filteredPhotos.value = filteredList.toList()
     }
 
     fun filterPhotosByArtist(artistData: ArtistData) {
-        _filteredPhotos.value = _album.value.filter { it.artist.id == artistData.id }
+        val filteredList = _album.value.filter { it.artist.id == artistData.id }
+        _filteredPhotos.value = filteredList.toList()
+    }
+
+    fun resetFilteredPhotos() {
+        _filteredPhotos.value = _album.value
     }
 
     fun setFrameType(frameType: FrameType) {
@@ -63,7 +63,6 @@ class ArtViewModel : ViewModel(){
         _selectedPhotoSize.value = size
     }
 
-    // Denne funksjonen regner ut totalprisen for ett valgt bilde
     fun calculateSelectionPrice(photo: Photo): Float {
         return photo.price +
                 _selectedFrameType.value.extraPrice +
@@ -102,7 +101,6 @@ class ArtViewModel : ViewModel(){
         _shoppingCart.value = emptyList()
     }
 
-
     val totalPrice: Float
         get() = _shoppingCart.value.sumOf { selectedPhoto ->
             (selectedPhoto.photo.price +
@@ -110,8 +108,4 @@ class ArtViewModel : ViewModel(){
                     selectedPhoto.frameWidth.extraPrice +
                     selectedPhoto.photoSize.extraPrice).toDouble()
         }.toFloat()
-
-    fun navigateTo(screen: Screens) {
-        _currentScreen.update { screen }
-    }
 }

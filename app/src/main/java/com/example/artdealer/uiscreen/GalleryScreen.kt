@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -39,27 +40,42 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.artdealer.data.Photo
+import com.example.artdealer.data.Screens
 import com.example.artdealer.viewmodel.ArtViewModel
+import androidx.compose.ui.res.stringResource
+import com.example.artdealer.R
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GalleryScreen(
     navController: NavController,
     viewModel: ArtViewModel,
-    title: String = "Bilder"
+    title: String = stringResource(id = R.string.pictures)
 ) {
+    val updatedPhotosText = stringResource(R.string.updated_photos)
+
+    LaunchedEffect(viewModel.filteredPhotos) {
+        viewModel.filteredPhotos.collect { updatedPhotos ->
+            println(updatedPhotosText + updatedPhotos) // Debugging
+        }
+    }
 
     val filteredPhotos by viewModel.filteredPhotos.collectAsState()
+
 
     Scaffold(
         topBar = {
             TopAppBar(
                 modifier = Modifier.clip(RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)),
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
+                    IconButton(onClick = {
+                        viewModel.resetFilteredPhotos()
+                        navController.navigateUp()
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Tilbake"
+                            contentDescription = stringResource(id = R.string.back)
                         )
                     }
                 },
@@ -90,8 +106,7 @@ fun GalleryScreen(
                 PhotoCard(
                     photo = photo,
                     onClick = {
-                        // Eksempel: Navigasjon til detaljer-skjermen
-                        // navController.navigate("details/${photo.id}")
+                        navController.navigate(Screens.DetailedView.withArgs(photo.id))
                     }
                 )
             }
@@ -118,7 +133,7 @@ fun PhotoCard(
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
             onClick = onClick
         ) {
-            //
+
             Image(
                 painter = painterResource(id = photo.imageID),
                 contentDescription = photo.title,
