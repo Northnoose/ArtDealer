@@ -8,7 +8,7 @@
     <string name="item_count">Antall bilder valgt:</string>
     <string name="total_price">Totalpris:</string>
     <string name="payment_done">Betaling utført</string>
-    <string name="pay_price">Betal %1$d,- Kr</string>
+    <string name="pay_price">Betal:</string>
     <string name="pictures">Bilder</string>
     <string name="back">Tilbake</string>
     <string name="remove_picture">Fjern bilde</string>

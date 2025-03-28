@@ -214,7 +214,7 @@ fun DetailsScreen(
 
             val selectionPrice = viewModel.calculateSelectionPrice(photo)
             Text(
-                text = stringResource(R.string.price_label, selectionPrice),
+                text = stringResource(R.string.price_label) + " " + selectionPrice,
                 fontSize = 18.sp,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 textAlign = TextAlign.Center
