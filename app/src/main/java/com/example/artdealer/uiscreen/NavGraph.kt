@@ -31,13 +31,14 @@ fun ArtDealerNavGraph(
         }
         composable(Screens.DetailedView.route) { backStackEntry ->
             val photoId = backStackEntry.arguments?.getString("photoId")?.toLongOrNull()
-            val album = viewModel.album.collectAsState(initial = emptyList()).value
-            val photo = album.find { it.id == photoId }
+            val uiState = viewModel.uiState.collectAsState().value
+            val photo = uiState.album.find { it.id == photoId }
 
             photo?.let {
                 DetailsScreen(navController = navController, viewModel = viewModel, photo = it)
             }
         }
+
     }
 }
 

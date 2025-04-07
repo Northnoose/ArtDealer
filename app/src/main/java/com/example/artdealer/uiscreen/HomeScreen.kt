@@ -58,7 +58,8 @@ fun HomeScreen(
     viewModel: ArtViewModel
 ) {
 
-    val shoppingCart by viewModel.shoppingCart.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val shoppingCart = uiState.shoppingCart
     val itemCount = shoppingCart.size
     val totalPrice = viewModel.totalPrice
 

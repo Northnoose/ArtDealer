@@ -3,71 +3,56 @@ package com.example.artdealer.viewmodel
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.example.artdealer.data.ArtistData
-import com.example.artdealer.data.ArtistDataSource.loadArtists
 import com.example.artdealer.data.Category
 import com.example.artdealer.data.FrameType
 import com.example.artdealer.data.FrameWidth
 import com.example.artdealer.data.Photo
-import com.example.artdealer.data.PhotoDataSource.loadPictures
 import com.example.artdealer.data.PhotoSize
-import com.example.artdealer.data.Screens
 import com.example.artdealer.data.SelectedPhoto
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 
 class ArtViewModel : ViewModel(){
-    private val _album = MutableStateFlow(loadPictures())
-    val album: StateFlow<List<Photo>> = _album
-
-    private val _filteredPhotos = MutableStateFlow(loadPictures())
-    val filteredPhotos: StateFlow<List<Photo>> = _filteredPhotos
-
-    private val _shoppingCart = MutableStateFlow<List<SelectedPhoto>>(emptyList())
-    val shoppingCart: StateFlow<List<SelectedPhoto>> = _shoppingCart
-
-    private val _selectedFrameType = MutableStateFlow(FrameType.WOOD)
-    val selectedFrameType: StateFlow<FrameType> = _selectedFrameType
-
-    private val _selectedFrameWidth = MutableStateFlow(FrameWidth.SMALL)
-    val selectedFrameWidth: StateFlow<FrameWidth> = _selectedFrameWidth
-
-    private val _selectedPhotoSize = MutableStateFlow(PhotoSize.SMALL)
-    val selectedPhotoSize: StateFlow<PhotoSize> = _selectedPhotoSize
+    private val _uiState = MutableStateFlow(PhotoUiState())
+    val uiState: StateFlow<PhotoUiState> = _uiState
 
     var chosenPhoto = mutableStateOf<SelectedPhoto?>(null)
-
     fun filterPhotosByCategory(category: Category) {
-        val filteredList = _album.value.filter { it.category == category }
-        _filteredPhotos.value = filteredList.toList()
+        _uiState.update { current ->
+            current.copy(filteredPhotos = current.album.filter { it.category == category })
+        }
     }
 
     fun filterPhotosByArtist(artistData: ArtistData) {
-        val filteredList = _album.value.filter { it.artist.id == artistData.id }
-        _filteredPhotos.value = filteredList.toList()
+        _uiState.update { current ->
+            current.copy(filteredPhotos = current.album.filter { it.artist.id == artistData.id })
+        }
     }
 
     fun resetFilteredPhotos() {
-        _filteredPhotos.value = _album.value
+        _uiState.update { current ->
+            current.copy(filteredPhotos = current.album)
+        }
     }
 
     fun setFrameType(frameType: FrameType) {
-        _selectedFrameType.value = frameType
+        _uiState.update { it.copy(selectedFrameType = frameType) }
     }
 
     fun setFrameWidth(frameWidth: FrameWidth) {
-        _selectedFrameWidth.value = frameWidth
+        _uiState.update { it.copy(selectedFrameWidth = frameWidth) }
     }
 
     fun setPhotoSize(size: PhotoSize) {
-        _selectedPhotoSize.value = size
+        _uiState.update { it.copy(selectedPhotoSize = size) }
     }
 
     fun calculateSelectionPrice(photo: Photo): Float {
         return photo.price +
-                _selectedFrameType.value.extraPrice +
-                _selectedFrameWidth.value.extraPrice +
-                _selectedPhotoSize.value.extraPrice
+                uiState.value.selectedFrameType.extraPrice +
+                uiState.value.selectedFrameWidth.extraPrice +
+                uiState.value.selectedPhotoSize.extraPrice
     }
 
     fun selectPhoto(
@@ -87,22 +72,25 @@ class ArtViewModel : ViewModel(){
 
     fun addToCart() {
         chosenPhoto.value?.let { selectedPhoto ->
-            _shoppingCart.update { it + selectedPhoto }
+            _uiState.update { it.copy(shoppingCart = it.shoppingCart + selectedPhoto) }
         }
     }
 
     fun removeFromCart(index: Int) {
-        if (index in _shoppingCart.value.indices) {
-            _shoppingCart.update { it.toMutableList().apply { removeAt(index) } }
+        _uiState.update { current ->
+            if (index in current.shoppingCart.indices) {
+                val updatedCart = current.shoppingCart.toMutableList().apply { removeAt(index) }
+                current.copy(shoppingCart = updatedCart)
+            } else current
         }
     }
 
     fun clearCart() {
-        _shoppingCart.value = emptyList()
+        _uiState.update { it.copy(shoppingCart = emptyList()) }
     }
 
     val totalPrice: Float
-        get() = _shoppingCart.value.sumOf { selectedPhoto ->
+        get() = uiState.value.shoppingCart.sumOf { selectedPhoto ->
             (selectedPhoto.photo.price +
                     selectedPhoto.frameType.extraPrice +
                     selectedPhoto.frameWidth.extraPrice +

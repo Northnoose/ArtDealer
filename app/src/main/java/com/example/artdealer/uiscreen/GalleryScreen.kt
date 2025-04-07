@@ -54,14 +54,13 @@ fun GalleryScreen(
     title: String = stringResource(id = R.string.pictures)
 ) {
     val updatedPhotosText = stringResource(R.string.updated_photos)
+    val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(viewModel.filteredPhotos) {
-        viewModel.filteredPhotos.collect { updatedPhotos ->
-            println(updatedPhotosText + updatedPhotos) // Debugging
-        }
+    val filteredPhotos = uiState.filteredPhotos
+
+    LaunchedEffect(uiState.filteredPhotos) {
+        println(updatedPhotosText + uiState.filteredPhotos) // Debugging
     }
-
-    val filteredPhotos by viewModel.filteredPhotos.collectAsState()
 
 
     Scaffold(

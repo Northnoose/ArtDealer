@@ -68,9 +68,12 @@ fun DetailsScreen(
         return
     }
 
-    val selectedFrameType by viewModel.selectedFrameType.collectAsState()
-    val selectedFrameWidth by viewModel.selectedFrameWidth.collectAsState()
-    val selectedPhotoSize by viewModel.selectedPhotoSize.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+
+    val selectedFrameType = uiState.selectedFrameType
+    val selectedFrameWidth = uiState.selectedFrameWidth
+    val selectedPhotoSize = uiState.selectedPhotoSize
+
 
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
