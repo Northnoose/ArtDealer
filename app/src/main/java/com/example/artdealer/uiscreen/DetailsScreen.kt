@@ -1,6 +1,5 @@
 package com.example.artdealer.uiscreen
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -47,7 +46,6 @@ import androidx.navigation.NavController
 import com.example.artdealer.data.FrameType
 import com.example.artdealer.data.FrameWidth
 import com.example.artdealer.data.Photo
-import com.example.artdealer.data.PhotoDataSource
 import com.example.artdealer.data.PhotoSize
 import com.example.artdealer.data.Screens
 import com.example.artdealer.viewmodel.ArtViewModel
