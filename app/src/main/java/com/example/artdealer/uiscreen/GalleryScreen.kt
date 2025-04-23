@@ -33,17 +33,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
+import com.example.artdealer.R
 import com.example.artdealer.data.Photo
 import com.example.artdealer.data.Screens
 import com.example.artdealer.viewmodel.ArtViewModel
-import androidx.compose.ui.res.stringResource
-import com.example.artdealer.R
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -134,7 +134,7 @@ fun PhotoCard(
         ) {
 
             Image(
-                painter = painterResource(id = photo.imageID),
+                painter = rememberAsyncImagePainter("https://artdealer-json-server-production.up.railway.app${photo.imageUrl}"),
                 contentDescription = photo.title,
                 modifier = Modifier.fillMaxSize()
             )

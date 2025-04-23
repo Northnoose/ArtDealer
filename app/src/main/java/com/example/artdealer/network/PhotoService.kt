@@ -18,8 +18,9 @@ interface PhotoService {
     @GET("photosizes")
     suspend fun getPhotoSize(): List<PhotoSize>
 
-    @GET("framewidht")
+    @GET("framewidth")
     suspend fun getFrameWidht(): List<FrameWidth>
+
 
     @GET("artists")
     suspend fun getArtisData(): List<ArtistData>

@@ -17,20 +17,25 @@ import com.example.artdealer.data.Category
 import com.example.artdealer.data.Screens
 import androidx.compose.ui.res.stringResource
 import com.example.artdealer.R
+import androidx.compose.runtime.collectAsState
+import com.example.artdealer.viewmodel.PhotoUiState
+import androidx.compose.runtime.getValue
 
 
-@Composable
 @OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun CategoryScreen(
     navController: NavController,
     viewModel: ArtViewModel
 ) {
+    val uiState by viewModel.uiState.collectAsState(initial = PhotoUiState())
+
     Scaffold(
         topBar = {
             TopAppBar(
                 modifier = Modifier.clip(RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)),
                 navigationIcon = {
-                    IconButton(onClick = {  navController.navigateUp() }) {
+                    IconButton(onClick = { navController.navigateUp() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back)
@@ -49,22 +54,23 @@ fun CategoryScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
-        },
-        content = { paddingValues ->
-            CategoryList(
-                modifier = Modifier.padding(paddingValues),
-                viewModel = viewModel,
-                navController
-            )
         }
-    )
+    ) { paddingValues ->
+        CategoryList(
+            categories = uiState.categories,
+            viewModel = viewModel,
+            navController = navController,
+            modifier = Modifier.padding(paddingValues)
+        )
+    }
 }
 
 @Composable
 fun CategoryList(
-    modifier: Modifier = Modifier,
+    categories: List<Category>,
     viewModel: ArtViewModel,
-    navController: NavController
+    navController: NavController,
+    modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
@@ -72,7 +78,7 @@ fun CategoryList(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Category.entries.forEach { category ->
+        categories.forEach { category ->
             CategoryButton(category, viewModel, navController)
         }
     }

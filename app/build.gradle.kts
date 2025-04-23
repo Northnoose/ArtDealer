@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("org.jetbrains.kotlin.kapt") // Viktig for Room
 }
 
 android {
@@ -39,13 +40,22 @@ android {
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.4.2"
-
     }
 }
 
 dependencies {
+
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("io.coil-kt:coil-compose:2.4.0")
+
+
+    implementation("androidx.room:room-runtime:2.6.1")
+    kapt("androidx.room:room-compiler:2.6.1")
+
+
+    implementation("androidx.room:room-ktx:2.6.1")
+
 
     implementation(platform(libs.androidx.compose.bom.v20250200))
     implementation(libs.ui)
@@ -57,9 +67,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx.v261)
     implementation(libs.androidx.activity.compose.v171)
     implementation(libs.material3)
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
 
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit.v115)
     androidTestImplementation(libs.androidx.espresso.core.v351)

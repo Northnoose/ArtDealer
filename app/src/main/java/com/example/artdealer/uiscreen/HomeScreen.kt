@@ -38,18 +38,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.artdealer.R
 import com.example.artdealer.data.Screens
-import com.example.artdealer.data.SelectedPhoto
+import com.example.artdealer.data.SelectedPhotoEntity
 import com.example.artdealer.viewmodel.ArtViewModel
 import kotlinx.coroutines.delay
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import com.example.artdealer.R
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,11 +58,8 @@ fun HomeScreen(
     navController: NavController,
     viewModel: ArtViewModel
 ) {
-
-    val uiState by viewModel.uiState.collectAsState()
-    val shoppingCart = uiState.shoppingCart
-    val itemCount = shoppingCart.size
-    val totalPrice = viewModel.totalPrice
+    val shoppingCart by viewModel.shoppingCartItems.collectAsState()
+    val totalPrice by viewModel.totalPrice.collectAsState()
 
     Scaffold(
         topBar = {
@@ -88,9 +86,8 @@ fun HomeScreen(
         bottomBar = {
             BottomBar(
                 shoppingCart = shoppingCart,
-                itemCount = itemCount,
                 totalPrice = totalPrice,
-                onRemoveItem = { index -> viewModel.removeFromCart(index) },
+                onRemoveItem = { item -> viewModel.removeFromCart(item) },
                 onRemoveAllItems = { viewModel.clearCart() }
             )
         }
@@ -110,22 +107,14 @@ fun HomeScreen(
             )
 
             Button(
-                onClick = {
-                    navController.navigate(Screens.Artist.route)
-                },
-                modifier = Modifier
-                    .fillMaxWidth(0.95f)
-                    .height(56.dp)
+                onClick = { navController.navigate(Screens.Artist.route) },
+                modifier = Modifier.fillMaxWidth(0.95f).height(56.dp)
             ) {
                 Text(text = stringResource(id = R.string.artist), fontSize = 20.sp)
             }
             Button(
-                onClick = {
-                    navController.navigate(Screens.Category.route)
-                },
-                modifier = Modifier
-                    .fillMaxWidth(0.95f)
-                    .height(56.dp)
+                onClick = { navController.navigate(Screens.Category.route) },
+                modifier = Modifier.fillMaxWidth(0.95f).height(56.dp)
             ) {
                 Text(text = stringResource(id = R.string.category), fontSize = 20.sp)
             }
@@ -135,18 +124,16 @@ fun HomeScreen(
 
 @Composable
 fun BottomBar(
-    shoppingCart: List<SelectedPhoto>,
-    itemCount: Int,
+    shoppingCart: List<SelectedPhotoEntity>,
     totalPrice: Float,
-    onRemoveItem: (Int) -> Unit,
+    onRemoveItem: (SelectedPhotoEntity) -> Unit,
     onRemoveAllItems: () -> Unit
 ) {
-    if (itemCount == 0) {
+    if (shoppingCart.isEmpty()) {
         EmptyCartBar()
     } else {
         CheckoutBar(
             shoppingCart = shoppingCart,
-            itemCount = itemCount,
             totalPrice = totalPrice,
             onRemoveItem = onRemoveItem,
             onRemoveAllItems = onRemoveAllItems
@@ -174,10 +161,9 @@ fun EmptyCartBar() {
 
 @Composable
 fun CheckoutBar(
-    shoppingCart: List<SelectedPhoto>,
-    itemCount: Int,
+    shoppingCart: List<SelectedPhotoEntity>,
     totalPrice: Float,
-    onRemoveItem: (Int) -> Unit,
+    onRemoveItem: (SelectedPhotoEntity) -> Unit,
     onRemoveAllItems: () -> Unit
 ) {
     var paymentDone by remember { mutableStateOf(false) }
@@ -197,11 +183,8 @@ fun CheckoutBar(
         color = Color(0xFFFFA84E)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
         ) {
-
             Text(
                 text = stringResource(id = R.string.checkout),
                 fontSize = 20.sp,
@@ -211,53 +194,34 @@ fun CheckoutBar(
 
             Spacer(Modifier.height(8.dp))
 
-
-            shoppingCart.forEachIndexed { index, selected ->
-                if (index > 0) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        thickness = 1.dp,
-                        color = Color.Gray.copy(alpha = 0.5f)
-                    )
-                }
+            shoppingCart.forEach { selected ->
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    thickness = 1.dp,
+                    color = Color.Gray.copy(alpha = 0.5f)
+                )
 
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text(
-                            text = "${selected.photo.category} | " +
-                                    "${selected.photo.artist.name} ${selected.photo.artist.familyName}",
-                            fontSize = 16.sp
-                        )
-                        Text(
-                            text = "${selected.frameType.name}, ${selected.frameWidth.name}, ${selected.photoSize.name}",
-                            fontSize = 14.sp
-                        )
-                        Text(
-                            text = selected.photo.title,
-                            fontSize = 14.sp
-                        )
+                        Text("${selected.category} | ${selected.artistName}", fontSize = 16.sp)
+                        Text("${selected.frameType}, ${selected.frameWidth}, ${selected.photoSize}", fontSize = 14.sp)
+                        Text(selected.photoTitle, fontSize = 14.sp)
                     }
                     IconButton(
-                        onClick = {
-                            val indexToRemove = shoppingCart.indexOf(selected)
-                            if (indexToRemove != -1) onRemoveItem(indexToRemove)
-                        },
+                        onClick = { onRemoveItem(selected) },
                         modifier = Modifier.semantics {
                             contentDescription = context.getString(R.string.remove_picture)
                         }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = null // ← ikke nødvendig å ha begge steder
+                            contentDescription = null
                         )
                     }
-
                 }
             }
 
@@ -268,7 +232,7 @@ fun CheckoutBar(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(stringResource(id = R.string.item_count))
-                Text("$itemCount")
+                Text("${shoppingCart.size}")
             }
 
             Row(
@@ -288,9 +252,7 @@ fun CheckoutBar(
             )
 
             Button(
-                onClick = {
-                    paymentDone = true
-                },
+                onClick = { paymentDone = true },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = buttonColor)
             ) {
@@ -299,7 +261,7 @@ fun CheckoutBar(
                         stringResource(id = R.string.payment_done)
                     else
                         stringResource(id = R.string.pay_price, totalPrice.toInt()),
-                                fontSize = 18.sp,
+                    fontSize = 18.sp,
                     color = Color.White
                 )
             }

@@ -1,12 +1,12 @@
 package com.example.artdealer.data
 
-import androidx.annotation.DrawableRes
-
 data class Photo(
-    val id: Long,
+    val id: Int,
     val title: String,
     val imageUrl: String,
-    val artist: ArtistData,
-    val category: Category,
-    val price: Float = 0.0f
+    val artistId: Int,  // Endret fra Long til Int
+    val categoryId: Int,  // Endret fra Long til Int
+    val price: Float = 0.0f,
+    var artist: ArtistData? = null,
+    var category: Category? = null
 )

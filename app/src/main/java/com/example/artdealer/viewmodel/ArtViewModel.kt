@@ -2,31 +2,81 @@ package com.example.artdealer.viewmodel
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.example.artdealer.data.ArtistData
-import com.example.artdealer.data.Category
-import com.example.artdealer.data.FrameType
-import com.example.artdealer.data.FrameWidth
-import com.example.artdealer.data.Photo
-import com.example.artdealer.data.PhotoSize
-import com.example.artdealer.data.SelectedPhoto
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
+import androidx.lifecycle.viewModelScope
+import com.example.artdealer.data.*
+import com.example.artdealer.network.PhotoService
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
-class ArtViewModel : ViewModel(){
+class ArtViewModel(
+    private val repository: ShoppingCartRepository,
+    private val photoService: PhotoService
+) : ViewModel() {
+
     private val _uiState = MutableStateFlow(PhotoUiState())
     val uiState: StateFlow<PhotoUiState> = _uiState
 
     var chosenPhoto = mutableStateOf<SelectedPhoto?>(null)
+
+    val shoppingCartItems: StateFlow<List<SelectedPhotoEntity>> = repository.allItems.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        emptyList()
+    )
+
+    init {
+        fetchDataFromServer()
+    }
+
+    private fun fetchDataFromServer() {
+        viewModelScope.launch {
+            try {
+                val photos = photoService.getPhotos()
+                val artists = photoService.getArtisData()
+                val categories = photoService.getCategory()
+                val frameTypes = photoService.getFrameType()
+                val frameWidths = photoService.getFrameWidht()
+                val photoSizes = photoService.getPhotoSize()
+
+                val mappedPhotos = photos.map { photo ->
+                    val artist = artists.find { it.id.toLong().toInt() == photo.artistId }
+                    val category = categories.find { it.id.toLong().toInt() == photo.categoryId }
+                    // Bruk safe call ?. og fallback til tom artist/category hvis null
+                    photo.copy(
+                        artist = artist ?: ArtistData(0, "", ""),
+                        category = category ?: Category(0, "")
+                    )
+                }
+
+                _uiState.update {
+                    it.copy(
+                        album = mappedPhotos,
+                        filteredPhotos = mappedPhotos,
+                        artists = artists,
+                        categories = categories,
+                        frameTypes = frameTypes,
+                        frameWidths = frameWidths,
+                        photoSizes = photoSizes,
+                        selectedFrameType = frameTypes.firstOrNull(),
+                        selectedFrameWidth = frameWidths.firstOrNull(),
+                        selectedPhotoSize = photoSizes.firstOrNull()
+                    )
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     fun filterPhotosByCategory(category: Category) {
         _uiState.update { current ->
-            current.copy(filteredPhotos = current.album.filter { it.category == category })
+            current.copy(filteredPhotos = current.album.filter { it.category?.id == category.id })
         }
     }
 
     fun filterPhotosByArtist(artistData: ArtistData) {
         _uiState.update { current ->
-            current.copy(filteredPhotos = current.album.filter { it.artist.id == artistData.id })
+            current.copy(filteredPhotos = current.album.filter { it.artist?.id == artistData.id })
         }
     }
 
@@ -50,16 +100,16 @@ class ArtViewModel : ViewModel(){
 
     fun calculateSelectionPrice(photo: Photo): Float {
         return photo.price +
-                uiState.value.selectedFrameType.extraPrice +
-                uiState.value.selectedFrameWidth.extraPrice +
-                uiState.value.selectedPhotoSize.extraPrice
+                (uiState.value.selectedFrameType?.extraPrice ?: 0f) +
+                (uiState.value.selectedFrameWidth?.extraPrice ?: 0f) +
+                (uiState.value.selectedPhotoSize?.extraPrice ?: 0f)
     }
 
     fun selectPhoto(
         photo: Photo,
-        frame: FrameType = FrameType.WOOD,
-        frameWidth: FrameWidth = FrameWidth.SMALL,
-        size: PhotoSize = PhotoSize.SMALL
+        frame: FrameType,
+        frameWidth: FrameWidth,
+        size: PhotoSize
     ) {
         chosenPhoto.value = SelectedPhoto(
             photo = photo,
@@ -72,28 +122,35 @@ class ArtViewModel : ViewModel(){
 
     fun addToCart() {
         chosenPhoto.value?.let { selectedPhoto ->
-            _uiState.update { it.copy(shoppingCart = it.shoppingCart + selectedPhoto) }
+            val entity = SelectedPhotoEntity(
+                photoTitle = selectedPhoto.photo.title,
+                artistName = "${selectedPhoto.photo.artist?.name} ${selectedPhoto.photo.artist?.familyName}",
+                category = selectedPhoto.photo.category!!.name,
+                frameType = selectedPhoto.frameType.name,
+                frameWidth = selectedPhoto.frameWidth.name,
+                photoSize = selectedPhoto.photoSize.name,
+                photoPrice = selectedPhoto.photoPrice ?: 0f
+            )
+
+            viewModelScope.launch {
+                repository.insert(entity)
+            }
         }
     }
 
-    fun removeFromCart(index: Int) {
-        _uiState.update { current ->
-            if (index in current.shoppingCart.indices) {
-                val updatedCart = current.shoppingCart.toMutableList().apply { removeAt(index) }
-                current.copy(shoppingCart = updatedCart)
-            } else current
+    fun removeFromCart(item: SelectedPhotoEntity) {
+        viewModelScope.launch {
+            repository.delete(item)
         }
     }
 
     fun clearCart() {
-        _uiState.update { it.copy(shoppingCart = emptyList()) }
+        viewModelScope.launch {
+            repository.clearCart()
+        }
     }
 
-    val totalPrice: Float
-        get() = uiState.value.shoppingCart.sumOf { selectedPhoto ->
-            (selectedPhoto.photo.price +
-                    selectedPhoto.frameType.extraPrice +
-                    selectedPhoto.frameWidth.extraPrice +
-                    selectedPhoto.photoSize.extraPrice).toDouble()
-        }.toFloat()
+    val totalPrice: StateFlow<Float> = shoppingCartItems.map { items ->
+        items.sumOf { it.photoPrice.toDouble() }.toFloat()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0f)
 }

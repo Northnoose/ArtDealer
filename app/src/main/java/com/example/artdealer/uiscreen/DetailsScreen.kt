@@ -1,59 +1,30 @@
 package com.example.artdealer.uiscreen
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.artdealer.data.FrameType
-import com.example.artdealer.data.FrameWidth
+import coil.compose.rememberAsyncImagePainter
+import com.example.artdealer.R
 import com.example.artdealer.data.Photo
-import com.example.artdealer.data.PhotoSize
 import com.example.artdealer.data.Screens
 import com.example.artdealer.viewmodel.ArtViewModel
 import kotlinx.coroutines.launch
-import androidx.compose.ui.res.stringResource
-import com.example.artdealer.R
 
-// DetailsScreen.kt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailsScreen(
@@ -72,10 +43,8 @@ fun DetailsScreen(
     val selectedFrameWidth = uiState.selectedFrameWidth
     val selectedPhotoSize = uiState.selectedPhotoSize
 
-
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-
     val itemAdded = stringResource(R.string.item_added)
 
     Scaffold(
@@ -103,7 +72,6 @@ fun DetailsScreen(
                 )
             )
         },
-
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
         }
@@ -116,7 +84,7 @@ fun DetailsScreen(
                 .padding(16.dp)
         ) {
             Image(
-                painter = painterResource(id = photo.imageID),
+                painter = rememberAsyncImagePainter("https://artdealer-json-server-production.up.railway.app${photo.imageUrl}"),
                 contentDescription = photo.title,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -129,11 +97,10 @@ fun DetailsScreen(
             Text(stringResource(R.string.choose_frame_quality), fontSize = 18.sp)
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("FrameTypeOptions"),
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                FrameType.entries.forEach { frameType ->
+                uiState.frameTypes.forEach { frameType ->
                     Row(
                         modifier = Modifier
                             .selectable(
@@ -158,11 +125,10 @@ fun DetailsScreen(
             Text(stringResource(R.string.choose_frame_width), fontSize = 18.sp)
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("FrameWidthOptions"),
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                FrameWidth.entries.forEach { width ->
+                uiState.frameWidths.forEach { width ->
                     Row(
                         modifier = Modifier
                             .selectable(
@@ -177,7 +143,7 @@ fun DetailsScreen(
                             onClick = { viewModel.setFrameWidth(width) }
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("$width", fontSize = 16.sp)
+                        Text(width.name, fontSize = 16.sp)
                     }
                 }
             }
@@ -187,11 +153,10 @@ fun DetailsScreen(
             Text(stringResource(R.string.choose_photo_size), fontSize = 18.sp)
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("PhotoSizeOptions"),
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                PhotoSize.entries.forEach { size ->
+                uiState.photoSizes.forEach { size ->
                     Row(
                         modifier = Modifier
                             .selectable(
@@ -229,19 +194,21 @@ fun DetailsScreen(
             ) {
                 Button(
                     onClick = {
-                        viewModel.selectPhoto(
-                            photo = photo,
-                            frame = selectedFrameType,
-                            frameWidth = selectedFrameWidth,
-                            size = selectedPhotoSize,
-                        )
-                        viewModel.addToCart()
-
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = itemAdded,
-                                duration = SnackbarDuration.Short
+                        if (selectedFrameType != null && selectedFrameWidth != null && selectedPhotoSize != null) {
+                            viewModel.selectPhoto(
+                                photo = photo,
+                                frame = selectedFrameType,
+                                frameWidth = selectedFrameWidth,
+                                size = selectedPhotoSize
                             )
+                            viewModel.addToCart()
+
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = itemAdded,
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
                         }
                     },
                     modifier = Modifier.weight(1f)
