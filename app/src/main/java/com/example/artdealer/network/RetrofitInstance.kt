@@ -12,5 +12,5 @@ object RetrofitInstance {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(PhotoService::class.java)
-        }
     }
+}
