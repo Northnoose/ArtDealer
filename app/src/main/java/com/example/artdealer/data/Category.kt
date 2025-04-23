@@ -1,8 +1,6 @@
 package com.example.artdealer.data
 
-enum class Category {
-    NATURE,
-    PORTRAIT,
-    ABSTRACT,
-    ANIMALS
-}
+data class Category (
+    val id: Int,
+    val name: String,
+)
