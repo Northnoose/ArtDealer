@@ -6,6 +6,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -13,26 +15,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.artdealer.viewmodel.ArtViewModel
-import com.example.artdealer.data.ArtistDataSource
 import com.example.artdealer.data.ArtistData
 import com.example.artdealer.data.Screens
 import androidx.compose.ui.res.stringResource
 import com.example.artdealer.R
 
-
-@Composable
 @OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun ArtistsScreen(
     navController: NavController,
     viewModel: ArtViewModel
 ) {
+    val uiState by viewModel.uiState.collectAsState() // Henter oppdatert tilstand fra server
+
     Scaffold(
         topBar = {
             TopAppBar(
                 modifier = Modifier.clip(RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)),
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp()
-                    }) {
+                    IconButton(onClick = { navController.navigateUp() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back)
@@ -51,16 +52,15 @@ fun ArtistsScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
-        },
-        content = { paddingValues ->
-            ArtistList(
-                artists = ArtistDataSource.loadArtists(),
-                modifier = Modifier.padding(paddingValues),
-                viewModel = viewModel,
-                navController
-            )
         }
-    )
+    ) { paddingValues ->
+        ArtistList(
+            artists = uiState.artists, // Nå hentes artister fra ViewModel sin server-data
+            modifier = Modifier.padding(paddingValues),
+            viewModel = viewModel,
+            navController = navController
+        )
+    }
 }
 
 @Composable
@@ -90,7 +90,7 @@ fun ArtistButton(
 ) {
     Button(
         onClick = {
-            viewModel.filterPhotosByArtist(artist) // Filtrer bilder basert på kunstner
+            viewModel.filterPhotosByArtist(artist)
             navController.navigate(Screens.Gallery.route)
         },
         modifier = Modifier.fillMaxWidth(),
